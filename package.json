@@ -1,0 +1,32 @@
+{
+  "name": "artiffine-base",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "yarn workspace @artiffine/frontend dev",
+    "dev:console": "yarn workspace @artiffine/console dev",
+    "build": "yarn workspace @artiffine/frontend build",
+    "start": "yarn workspace @artiffine/frontend start",
+    "test:ci": "yarn workspace @artiffine/frontend test",
+    "type-check": "yarn workspace @artiffine/frontend type-check",
+    "chain": "yarn workspace @artiffine/hardhat chain",
+    "deploy:localhost": "yarn workspace @artiffine/hardhat deploy:localhost",
+    "read:localhost": "yarn workspace @artiffine/hardhat read:localhost",
+    "write:localhost": "yarn workspace @artiffine/hardhat write:localhost",
+    "compile": "yarn workspace @artiffine/hardhat compile",
+    "test": "yarn workspace @artiffine/hardhat test",
+    "format": "yarn workspace @artiffine/hardhat format"
+  },
+  "workspaces": {
+    "packages": [
+      "packages/*"
+    ],
+    "nohoist": [
+      "**/hardhat",
+      "**/hardhat/**"
+    ]
+  },
+  "devDependencies": {
+    "prettier": "^2.6.2"
+  }
+}

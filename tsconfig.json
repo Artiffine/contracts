@@ -1,0 +1,11 @@
+{
+  "compilerOptions": {
+    "baseUrl": "\u0000",
+    "paths": {
+      "@artiffine/lib": ["../../@lib/src"],
+      "@artiffine/core": ["../../@core/src"],
+      "@artiffine/hardhat-types": ["../../hardhat-types/src"],
+      "@artiffine/hardhat-types/*": ["../../hardhat-types/src/*"]
+    }
+  }
+}
