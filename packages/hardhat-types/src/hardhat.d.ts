@@ -65,9 +65,41 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.Azuki__factory>;
     getContractFactory(
+      name: "INFTContractWithAllowlist",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.INFTContractWithAllowlist__factory>;
+    getContractFactory(
+      name: "INFTContractWithWithdrawal",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.INFTContractWithWithdrawal__factory>;
+    getContractFactory(
+      name: "NFTContractWithAllowlist",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.NFTContractWithAllowlist__factory>;
+    getContractFactory(
+      name: "NFTContractWithWithdrawal",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.NFTContractWithWithdrawal__factory>;
+    getContractFactory(
+      name: "INFTContractBase",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.INFTContractBase__factory>;
+    getContractFactory(
+      name: "NFTContractBase",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.NFTContractBase__factory>;
+    getContractFactory(
       name: "Multicall",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.Multicall__factory>;
+    getContractFactory(
+      name: "NFTContractCrossmint",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.NFTContractCrossmint__factory>;
+    getContractFactory(
+      name: "NFTContractExample",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.NFTContractExample__factory>;
     getContractFactory(
       name: "NFTContractSimple",
       signerOrOptions?: ethers.Signer | FactoryOptions
@@ -76,6 +108,14 @@ declare module "hardhat/types/runtime" {
       name: "NFTContract",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.NFTContract__factory>;
+    getContractFactory(
+      name: "Multicall",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.Multicall__factory>;
+    getContractFactory(
+      name: "ERC721A__IERC721Receiver",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.ERC721A__IERC721Receiver__factory>;
     getContractFactory(
       name: "ERC721A",
       signerOrOptions?: ethers.Signer | FactoryOptions
@@ -151,10 +191,50 @@ declare module "hardhat/types/runtime" {
       signer?: ethers.Signer
     ): Promise<Contracts.Azuki>;
     getContractAt(
+      name: "INFTContractWithAllowlist",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.INFTContractWithAllowlist>;
+    getContractAt(
+      name: "INFTContractWithWithdrawal",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.INFTContractWithWithdrawal>;
+    getContractAt(
+      name: "NFTContractWithAllowlist",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.NFTContractWithAllowlist>;
+    getContractAt(
+      name: "NFTContractWithWithdrawal",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.NFTContractWithWithdrawal>;
+    getContractAt(
+      name: "INFTContractBase",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.INFTContractBase>;
+    getContractAt(
+      name: "NFTContractBase",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.NFTContractBase>;
+    getContractAt(
       name: "Multicall",
       address: string,
       signer?: ethers.Signer
     ): Promise<Contracts.Multicall>;
+    getContractAt(
+      name: "NFTContractCrossmint",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.NFTContractCrossmint>;
+    getContractAt(
+      name: "NFTContractExample",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.NFTContractExample>;
     getContractAt(
       name: "NFTContractSimple",
       address: string,
@@ -165,6 +245,16 @@ declare module "hardhat/types/runtime" {
       address: string,
       signer?: ethers.Signer
     ): Promise<Contracts.NFTContract>;
+    getContractAt(
+      name: "Multicall",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.Multicall>;
+    getContractAt(
+      name: "ERC721A__IERC721Receiver",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.ERC721A__IERC721Receiver>;
     getContractAt(
       name: "ERC721A",
       address: string,

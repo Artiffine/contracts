@@ -1,12 +1,17 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.10;
+pragma solidity ^0.8.9;
 
 import '@openzeppelin/contracts/token/ERC721/ERC721.sol';
 import '@openzeppelin/contracts/access/Ownable.sol';
 import '@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol';
 import '@openzeppelin/contracts/utils/math/SafeMath.sol';
 
+/**
+ * NFT Contract without "EIP-2981: NFT Royalty Standard"
+ * Basic OpenZeppelin ERC721 implementation.
+ * Everything in one file.
+ */
 contract NFTContractSimple is ERC721, ERC721Enumerable, Ownable {
     using SafeMath for uint256;
 
@@ -15,39 +20,39 @@ contract NFTContractSimple is ERC721, ERC721Enumerable, Ownable {
     string public contractURI;
 
     bool public isSaleActive = false;
-    bool public isWhitelistSaleActive = false;
+    bool public isAllowlistSaleActive = false;
 
     uint256 public constant MAX_SUPPLY = 1000;
     uint256 public constant MAX_PUBLIC_MINT = 10;
     uint256 public constant PRICE_PER_TOKEN = 0.0001 ether;
 
-    mapping(address => uint8) private _whitelist;
+    mapping(address => uint8) private _allowlist;
 
     constructor() ERC721('ArtiffineDemo', 'ARTIF') {}
 
-    // whitelist mint
-    function setIsWhitelistSaleActive(bool isActive) external onlyOwner {
-        isWhitelistSaleActive = isActive;
+    // allowlist mint
+    function setIsAllowlistSaleActive(bool isActive) external onlyOwner {
+        isAllowlistSaleActive = isActive;
     }
 
-    function setWhitelistAddresses(address[] calldata addresses, uint8 numAllowedToMint) external onlyOwner {
+    function setAllowlistAddresses(address[] calldata addresses, uint8 numAllowedToMint) external onlyOwner {
         for (uint8 i = 0; i < addresses.length; i++) {
-            _whitelist[addresses[i]] = numAllowedToMint;
+            _allowlist[addresses[i]] = numAllowedToMint;
         }
     }
 
-    function whitelistMintAmount(address addr) external view returns (uint8) {
-        return _whitelist[addr];
+    function allowlistMintAmount(address addr) external view returns (uint8) {
+        return _allowlist[addr];
     }
 
-    function mintWhitelisted(uint8 numberOfTokens) external payable {
+    function mintAllowlisted(uint8 numberOfTokens) external payable {
         uint256 ts = totalSupply();
-        require(isWhitelistSaleActive, 'Whitelist sale is not active');
-        require(numberOfTokens <= _whitelist[msg.sender], 'Exceeded max available to purchase');
+        require(isAllowlistSaleActive, 'Allowlist sale is not active');
+        require(numberOfTokens <= _allowlist[msg.sender], 'Exceeded max available to purchase');
         require(ts + numberOfTokens <= MAX_SUPPLY, 'Purchase would exceed max tokens');
         require(PRICE_PER_TOKEN * numberOfTokens <= msg.value, 'Ether value sent is not correct');
 
-        _whitelist[msg.sender] -= numberOfTokens;
+        _allowlist[msg.sender] -= numberOfTokens;
         for (uint8 i = 0; i < numberOfTokens; i++) {
             _safeMint(msg.sender, ts + i);
         }

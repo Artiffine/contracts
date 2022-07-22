@@ -24,7 +24,7 @@ describe('NFTContract', () => {
     Token = await ethers.getContractFactory(CONTRACT_ARTIFACT_NAME)
     ;[owner, addr1, addr2, addr3, addr4, ...addrs] = await ethers.getSigners()
 
-    contract = (await Token.deploy()) as NFTContract
+    contract = (await Token.deploy()) as unknown as NFTContract
     await contract.deployed()
   })
 

@@ -1,11 +1,15 @@
 import { ethers } from 'hardhat'
+import { BigNumber, Contract } from 'ethers'
 import type { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers'
+import { parseEther } from '@ethersproject/units'
 
 import type { NFTContract } from '../../hardhat-types/src/contracts/NFTContract'
 
 const CONTRACT_ARTIFACT_NAME_1 = 'Azuki'
 const CONTRACT_ARTIFACT_NAME_2 = 'NFTContractSimple'
 const CONTRACT_ARTIFACT_NAME_3 = 'NFTContract'
+const CONTRACT_ARTIFACT_NAME_4 = 'NFTContractCrossmint'
+const CONTRACT_ARTIFACT_NAME_5 = 'NFTContractConstructor'
 
 describe('NFTContract Gas Estimator', () => {
   let contracts: { [key: string]: NFTContract } = {}
@@ -15,10 +19,10 @@ describe('NFTContract Gas Estimator', () => {
   beforeEach(async function () {
     ;[owner, ...addrs] = await ethers.getSigners()
 
-    const deployContract = async (artifact: string) => {
+    const deployContract = async (artifact: string, ...args: any[]) => {
       // Get the ContractFactory and Signers here.
       const Token = await ethers.getContractFactory(artifact)
-      const contract = (await Token.deploy()) as NFTContract
+      const contract = (await Token.deploy(...args)) as unknown as NFTContract
       await contract.deployed()
       return contract
     }
@@ -32,6 +36,17 @@ describe('NFTContract Gas Estimator', () => {
       ),
       [CONTRACT_ARTIFACT_NAME_3]: await deployContract(
         CONTRACT_ARTIFACT_NAME_3
+      ),
+      [CONTRACT_ARTIFACT_NAME_4]: await deployContract(
+        CONTRACT_ARTIFACT_NAME_4
+      ),
+      [CONTRACT_ARTIFACT_NAME_5]: await deployContract(
+        CONTRACT_ARTIFACT_NAME_5,
+        'Test name',
+        'TST',
+        BigNumber.from(`${1_000}`),
+        BigNumber.from(`${10}`),
+        parseEther(`${0.0001}`)
       ),
     }
   })
@@ -78,14 +93,18 @@ describe('NFTContract Gas Estimator', () => {
     let table = {} as { [key: string]: {} }
     for (let index = 0; index < mintLenght; index++) {
       const entries = Object.entries(res)
-      table[`mint_${index + 1}`] = await entries.reduce(
-        async (acc, [key, values]) => ({
-          ...acc,
-          [key]: (await values)[index],
-        }),
-        {}
-      )
+
+      for (const entry of entries) {
+        const [key, valuePromises] = entry
+        const values = await valuePromises
+        table[`mint_${index + 1}`] = {
+          ...(table[`mint_${index + 1}`] ?? {}),
+          [key]: values[index],
+        }
+      }
     }
+
+    console.log(table)
 
     return table
   }
@@ -107,22 +126,22 @@ describe('NFTContract Gas Estimator', () => {
         disableSale: await callOnAllContracts(async (contract) =>
           (await contract.estimateGas.setIsSaleActive(false)).toNumber()
         ),
-        enableWhitelistSale: await callOnAllContracts(async (contract) =>
-          (await contract.estimateGas.setIsWhitelistSaleActive(true)).toNumber()
+        enableAllowlistSale: await callOnAllContracts(async (contract) =>
+          (await contract.estimateGas.setIsAllowlistSaleActive(true)).toNumber()
         ),
-        disableWhitelistSale: await callOnAllContracts(async (contract) =>
+        disableAllowlistSale: await callOnAllContracts(async (contract) =>
           (
-            await contract.estimateGas.setIsWhitelistSaleActive(false)
+            await contract.estimateGas.setIsAllowlistSaleActive(false)
           ).toNumber()
         ),
-        setWhiteList1Addresses: await callOnAllContracts(async (contract) =>
+        setAllowList1Addresses: await callOnAllContracts(async (contract) =>
           (
-            await contract.estimateGas.setWhitelistAddresses([owner.address], 1)
+            await contract.estimateGas.setAllowlistAddresses([owner.address], 1)
           ).toNumber()
         ),
-        setWhiteList10Addresses: await callOnAllContracts(async (contract) =>
+        setAllowList10Addresses: await callOnAllContracts(async (contract) =>
           (
-            await contract.estimateGas.setWhitelistAddresses(
+            await contract.estimateGas.setAllowlistAddresses(
               Array(10).fill(owner.address),
               1
             )

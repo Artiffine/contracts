@@ -27,7 +27,7 @@ describe('NFTContract production config', () => {
     Token = await ethers.getContractFactory(CONTRACT_ARTIFACT_NAME)
     ;[owner, addr1, addr2, addr3, addr4, ...addrs] = await ethers.getSigners()
 
-    contract = (await Token.deploy()) as NFTContract
+    contract = (await Token.deploy()) as unknown as NFTContract
     await contract.deployed()
   })
 
@@ -54,8 +54,8 @@ describe('NFTContract production config', () => {
       expect(await contract.isSaleActive()).to.equal(false)
     })
 
-    it('Should have correct isWhitelistSaleActive', async () => {
-      expect(await contract.isWhitelistSaleActive()).to.equal(false)
+    it('Should have correct isAllowlistSaleActive', async () => {
+      expect(await contract.isAllowlistSaleActive()).to.equal(false)
     })
 
     it('Should have correct PROVENANCE', async () => {
