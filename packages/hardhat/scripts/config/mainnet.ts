@@ -1,6 +1,6 @@
 import type { Config } from '.'
 
-const whiteList: string[] = []
+const allowlist: string[] = []
 
 const contractAddress = '...'
 
@@ -13,15 +13,15 @@ const baseUri = baseUris.postmint
 const contractUri = 'ipfs://...'
 
 // SHA-256 of contractUri 'ipfs://.../'
-const provenance = '...'
+const provenanceHash = '...'
 
 const config: Config = {
   chainName: 'mainnet',
   contractAddress,
-  whiteList,
+  allowlist,
   baseUri,
   contractUri,
-  provenance,
+  provenanceHash,
 }
 
 export default config

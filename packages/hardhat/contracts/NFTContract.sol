@@ -23,9 +23,10 @@ contract NFTContract is ERC721, ERC721Enumerable, Ownable, ERC721Royalty {
     bool public isSaleActive = false;
     bool public isAllowlistSaleActive = false;
 
-    uint256 public constant MAX_SUPPLY = 10_000;
-    uint256 public constant MAX_PUBLIC_MINT = 10;
-    uint256 public constant PRICE_PER_TOKEN = 0.0001 ether;
+    uint256 public MAX_SUPPLY = 10_000;
+    uint256 public MAX_PUBLIC_MINT = 10;
+    uint256 public PRICE_PER_TOKEN = 0.0001 ether;
+    uint256 public PRICE_PER_TOKEN_ALLOWLIST = 0.00001 ether;
 
     mapping(address => uint8) private _allowlist;
 
@@ -51,7 +52,7 @@ contract NFTContract is ERC721, ERC721Enumerable, Ownable, ERC721Royalty {
         require(isAllowlistSaleActive, 'Allowlist sale is not active');
         require(numberOfTokens <= _allowlist[msg.sender], 'Exceeded max available to purchase');
         require(ts + numberOfTokens <= MAX_SUPPLY, 'Purchase would exceed max tokens');
-        require(PRICE_PER_TOKEN * numberOfTokens <= msg.value, 'Ether value sent is not correct');
+        require(PRICE_PER_TOKEN_ALLOWLIST * numberOfTokens <= msg.value, 'Ether value sent is not correct');
 
         _allowlist[msg.sender] -= numberOfTokens;
         for (uint8 i = 0; i < numberOfTokens; i++) {
@@ -63,19 +64,33 @@ contract NFTContract is ERC721, ERC721Enumerable, Ownable, ERC721Royalty {
     function _beforeTokenTransfer(
         address from,
         address to,
-        uint256 tokenId
+        uint256 tokenId,
+        uint256 batchSize
     ) internal override(ERC721, ERC721Enumerable) {
-        super._beforeTokenTransfer(from, to, tokenId);
+        super._beforeTokenTransfer(from, to, tokenId, batchSize);
     }
 
-    function supportsInterface(bytes4 interfaceId)
-        public
-        view
-        virtual
-        override(ERC721, ERC721Enumerable, ERC721Royalty)
-        returns (bool)
-    {
+    function supportsInterface(
+        bytes4 interfaceId
+    ) public view virtual override(ERC721, ERC721Enumerable, ERC721Royalty) returns (bool) {
         return super.supportsInterface(interfaceId);
+    }
+
+    // setters
+    function setMaxSupply(uint256 maxSupply_) external onlyOwner {
+        MAX_SUPPLY = maxSupply_;
+    }
+
+    function setMaxPublicMint(uint256 maxPublicMint_) external onlyOwner {
+        MAX_PUBLIC_MINT = maxPublicMint_;
+    }
+
+    function setPricePerToken(uint256 pricePerToken_) external onlyOwner {
+        PRICE_PER_TOKEN = pricePerToken_;
+    }
+
+    function setPricePerTokenAllowlist(uint256 pricePerTokenAllowlist_) external onlyOwner {
+        PRICE_PER_TOKEN_ALLOWLIST = pricePerTokenAllowlist_;
     }
 
     function setBaseURI(string memory baseURI_) external onlyOwner {
@@ -94,6 +109,7 @@ contract NFTContract is ERC721, ERC721Enumerable, Ownable, ERC721Royalty {
         contractURI = contractUri_;
     }
 
+    // royalties
     function _burn(uint256 tokenId) internal virtual override(ERC721, ERC721Royalty) {
         super._burn(tokenId);
         _resetTokenRoyalty(tokenId);
@@ -108,7 +124,7 @@ contract NFTContract is ERC721, ERC721Enumerable, Ownable, ERC721Royalty {
         isSaleActive = isActive;
     }
 
-    function mint(uint8 numberOfTokens) public payable {
+    function mint(uint8 numberOfTokens, address to) public payable {
         uint256 ts = totalSupply();
         require(isSaleActive, 'Sale must be active to mint tokens');
         require(numberOfTokens <= MAX_PUBLIC_MINT, 'Exceeded max token purchase');
@@ -116,7 +132,17 @@ contract NFTContract is ERC721, ERC721Enumerable, Ownable, ERC721Royalty {
         require(PRICE_PER_TOKEN * numberOfTokens <= msg.value, 'Ether value sent is not correct');
 
         for (uint8 i = 0; i < numberOfTokens; i++) {
-            _safeMint(msg.sender, ts + i);
+            _safeMint(to, ts + i);
+        }
+    }
+
+    // free mint
+    function freeMint(uint256 numberOfTokens, address to) public onlyOwner {
+        uint256 ts = totalSupply();
+        require(ts + numberOfTokens <= MAX_SUPPLY, 'Purchase would exceed max tokens');
+
+        for (uint256 i = 0; i < numberOfTokens; i++) {
+            _safeMint(to, ts + i);
         }
     }
 

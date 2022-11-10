@@ -6,8 +6,14 @@
 import { formatEther } from '@ethersproject/units'
 import { ethers } from 'hardhat'
 
-import type { NFTContract } from '../../hardhat-types/src/contracts/NFTContract'
+import type { NFTContract } from '../typechain-types/contracts'
 import { getConfigByChainId } from './config'
+
+enum Artifacts {
+  'NFTContract' = 'NFTContract',
+}
+
+const CONTRACT_ARTIFACT_NAME: Artifacts = Artifacts.NFTContract
 
 async function main() {
   // ethers is avaialble in the global scope
@@ -28,7 +34,7 @@ async function main() {
 
   // We get the contract to deploy
   const nftContract = (await ethers.getContractAt(
-    'NFTContract',
+    CONTRACT_ARTIFACT_NAME,
     config.contractAddress
   )) as NFTContract
 
@@ -44,16 +50,16 @@ async function main() {
   console.log('PROVENANCE', await nftContract.PROVENANCE())
   console.log('isSaleActive', await nftContract.isSaleActive())
   console.log(
-    'isWhitelistSaleActive',
-    await nftContract.isWhitelistSaleActive()
+    'isAllowlistSaleActive',
+    await nftContract.isAllowlistSaleActive()
   )
 
   console.log('contractURI', await nftContract.contractURI())
   console.log(
-    'wl amount',
-    config.whiteList[0],
-    config.whiteList[0]
-      ? await nftContract.whitelistMintAmount(config.whiteList[0])
+    'allowlist amount',
+    config.allowlist[0],
+    config.allowlist[0]
+      ? await nftContract.allowlistMintAmount(config.allowlist[0])
       : '??'
   )
   const totalSupply = (await nftContract.totalSupply()).toNumber()

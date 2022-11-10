@@ -4,12 +4,17 @@ import type { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers'
 import { expect } from 'chai'
 import { parseEther } from '@ethersproject/units'
 
-import type { NFTContract } from '../../hardhat-types/src/contracts/NFTContract'
+import type { NFTContract } from '../typechain-types/contracts'
 
-const CONTRACT_ARTIFACT_NAME = 'Azuki'
+enum Artifacts {
+  'NFTContract' = 'NFTContract',
+  'Azuki' = 'Azuki',
+}
+
+const CONTRACT_ARTIFACT_NAME: Artifacts = Artifacts.NFTContract
 
 const PRICE_PER_TOKEN = '0.0001'
-const MAX_SUPPLY = 1_000
+const MAX_SUPPLY = 10_000
 const MAX_PUBLIC_MINT = 10
 
 describe('NFTContract production config', () => {

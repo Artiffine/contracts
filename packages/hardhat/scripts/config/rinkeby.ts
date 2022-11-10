@@ -1,18 +1,27 @@
-const whiteList: string[] = []
+import type { Config } from '.'
 
-const contractAddress = '0xDb74cb1308460e68eB8a0F83A1e61A89D58259bd'
+const allowlist: string[] = []
 
-const baseUri = 'ipfs://QmUizhGUSv8Yz8HH1YV2GWjiwHvofe2wiEfHrHBxxv3MJN/'
+const contractAddress = '...'
 
-const contractUri = 'ipfs://QmeJaDtVXNfCRcbHwNEfouVL1n4SPR3WdLezJmUpUD244u'
+const baseUris = {
+  premint: 'ipfs://.../', // anonyms
+  postmint: 'ipfs://.../',
+}
+const baseUri = baseUris.postmint
 
-const provenance = ''
+const contractUri = 'ipfs://...'
 
-export default {
-  chainName: 'rinkeby',
+// SHA-256 of contractUri 'ipfs://.../'
+const provenanceHash = '...'
+
+const config: Config = {
+  chainName: 'mainnet',
   contractAddress,
-  whiteList,
+  allowlist,
   baseUri,
   contractUri,
-  provenance,
+  provenanceHash,
 }
+
+export default config

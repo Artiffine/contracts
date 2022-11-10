@@ -9,10 +9,7 @@ try {
   console.log('File frontend/artifacts/contracts/contractAddress not found')
 }
 
-const whiteList: string[] = [
-  '0x70997970C51812dc3A010C7d01b50e0d17dc79C8',
-  '0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC',
-]
+const allowlist: string[] = []
 
 const contractAddress = NFTContract
 
@@ -20,15 +17,15 @@ const baseUri = ''
 
 const contractUri = 'ipfs://xxx'
 
-const provenance = ''
+const provenanceHash = ''
 
 const config: Config = {
   chainName: 'localhost',
   contractAddress,
-  whiteList,
+  allowlist,
   baseUri,
   contractUri,
-  provenance,
+  provenanceHash,
 }
 
 export default config

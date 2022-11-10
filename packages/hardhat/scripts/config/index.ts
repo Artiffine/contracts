@@ -4,11 +4,11 @@ import mainetConfig from './mainnet'
 
 export type Config = {
   chainName: string
-  whiteList: string[]
+  allowlist: string[]
   contractAddress: string
   baseUri: string
   contractUri: string
-  provenance: string
+  provenanceHash: string
 }
 
 export const getConfigByChainId = (chainId: number) => {

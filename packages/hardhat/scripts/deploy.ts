@@ -15,9 +15,11 @@ import {
   promptUserForGasPrice,
   awaitAndPrintTransactionResult,
 } from './utils/tasks'
+import { formatContractTransaction } from './utils'
 
 enum Artifacts {
   'NFTContract' = 'NFTContract',
+  'Multicall' = 'Multicall',
 }
 
 const CONTRACT_ARTIFACT_NAME: Artifacts = Artifacts.NFTContract
@@ -29,7 +31,7 @@ async function deployMulticallContract() {
     return
   }
   console.log('Deploying multicall contract...')
-  const MulticallContract = await ethers.getContractFactory('Multicall')
+  const MulticallContract = await ethers.getContractFactory(Artifacts.Multicall)
   const multicallContract = await MulticallContract.deploy()
   await multicallContract.deployed()
   saveFrontendFiles(multicallContract, 'MulticallContract')
@@ -63,7 +65,12 @@ async function main() {
 
   // deploy the main contract
   const NFTContract = await ethers.getContractFactory(CONTRACT_ARTIFACT_NAME)
+
   const contract = await NFTContract.deploy({ gasPrice })
+
+  console.log('Deploying contract to address: ', contract.address)
+  console.log(formatContractTransaction(contract.deployTransaction))
+
   await contract.deployed()
 
   await awaitAndPrintTransactionResult(contract.deployTransaction)
@@ -78,7 +85,8 @@ function deleteFrontendFiles() {
   try {
     const contractsFile = path.join(
       hardhatConfig.paths.root,
-      '../hardhat-types/src/contractAddress.ts'
+      './scripts/config',
+      '/localContractAddress.ts'
     )
 
     fs.unlinkSync(contractsFile)
@@ -86,19 +94,17 @@ function deleteFrontendFiles() {
     // do nothing
   }
 }
+
 function saveFrontendFiles(contract: Contract, contractName: string) {
-  const contractsDir = path.join(
-    hardhatConfig.paths.root,
-    '../hardhat-types/src'
-  )
+  const contractsDir = path.join(hardhatConfig.paths.root, './scripts/config')
 
   if (!fs.existsSync(contractsDir)) {
     fs.mkdirSync(contractsDir)
   }
 
   fs.appendFileSync(
-    contractsDir + '/contractAddress.ts',
-    `export const ${contractName} = '${contract.address}'\n`
+    contractsDir + '/localContractAddress.ts',
+    `export const ${contractName}_address = '${contract.address}'\n`
   )
 }
 

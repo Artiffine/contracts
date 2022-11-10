@@ -62,9 +62,10 @@ contract NFTContractSimple is ERC721, ERC721Enumerable, Ownable {
     function _beforeTokenTransfer(
         address from,
         address to,
-        uint256 tokenId
+        uint256 tokenId,
+        uint256 batchSize
     ) internal override(ERC721, ERC721Enumerable) {
-        super._beforeTokenTransfer(from, to, tokenId);
+        super._beforeTokenTransfer(from, to, tokenId, batchSize);
     }
 
     function supportsInterface(bytes4 interfaceId) public view virtual override(ERC721, ERC721Enumerable) returns (bool) {
@@ -92,7 +93,7 @@ contract NFTContractSimple is ERC721, ERC721Enumerable, Ownable {
         isSaleActive = isActive;
     }
 
-    function mint(uint8 numberOfTokens) public payable {
+    function mint(uint8 numberOfTokens, address to) public payable {
         uint256 ts = totalSupply();
         require(isSaleActive, 'Sale must be active to mint tokens');
         require(numberOfTokens <= MAX_PUBLIC_MINT, 'Exceeded max token purchase');
@@ -100,7 +101,17 @@ contract NFTContractSimple is ERC721, ERC721Enumerable, Ownable {
         require(PRICE_PER_TOKEN * numberOfTokens <= msg.value, 'Ether value sent is not correct');
 
         for (uint8 i = 0; i < numberOfTokens; i++) {
-            _safeMint(msg.sender, ts + i);
+            _safeMint(to, ts + i);
+        }
+    }
+
+    // free mint
+    function freeMint(uint256 numberOfTokens, address to) public onlyOwner {
+        uint256 ts = totalSupply();
+        require(ts + numberOfTokens <= MAX_SUPPLY, 'Purchase would exceed max tokens');
+
+        for (uint256 i = 0; i < numberOfTokens; i++) {
+            _safeMint(to, ts + i);
         }
     }
 

@@ -5,13 +5,7 @@ import { task } from 'hardhat/config'
 import { HardhatUserConfig } from 'hardhat/types'
 import '@nomiclabs/hardhat-etherscan'
 
-import {
-  ALCHEMY_RINKEBY_API_KEY,
-  RINKEBY_PRIVATE_KEY,
-  MAINNET_PRIVATE_KEY,
-  ALCHEMY_MAINNET_API_KEY,
-  ETHERSCAN_API_KEY,
-} from './.env/vars'
+import { config as envConfig } from './.env'
 
 // This is a sample Hardhat task. To learn how to create your own go to
 // https://hardhat.org/guides/create-task.html
@@ -35,23 +29,21 @@ const config: HardhatUserConfig = {
       },
     },
   },
-  // paths: {
-  //   artifacts: '../frontend/artifacts',
-  // },
   networks: {
     hardhat: {
       chainId: 1337,
     },
-    rinkeby: {
-      url: `https://eth-rinkeby.alchemyapi.io/v2/${ALCHEMY_RINKEBY_API_KEY}`,
-      accounts: [`0x${RINKEBY_PRIVATE_KEY}`],
+    goerli: {
+      url: `https://eth-goerli.g.alchemy.com/v2/${envConfig.ALCHEMY_GOERLI_API_KEY}`,
+      accounts: [`0x${envConfig.GOERLI_PRIVATE_KEY}`],
     },
-  },
-  typechain: {
-    outDir: '../hardhat-types/src',
+    // mainnet: {
+    //   url: `https://eth-mainnet.g.alchemy.com/v2/${envConfig.ALCHEMY_MAINNET_API_KEY}`,
+    //   accounts: [`0x${envConfig.MAINNET_PRIVATE_KEY}`],
+    // },
   },
   etherscan: {
-    apiKey: ETHERSCAN_API_KEY,
+    apiKey: envConfig.ETHERSCAN_API_KEY,
   },
 }
 

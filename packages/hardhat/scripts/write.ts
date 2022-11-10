@@ -8,24 +8,36 @@ import cliSelect from 'cli-select'
 import chalk from 'chalk'
 import prompt from 'prompt-sync'
 import { ContractTransaction } from '@ethersproject/contracts'
-import { formatEther } from '@ethersproject/units'
+import { formatEther, parseEther } from '@ethersproject/units'
 
-import type { NFTContract } from '../../hardhat-types/src/contracts/NFTContract'
+import type { NFTContract } from '../typechain-types/contracts'
 import {
   awaitAndPrintTransactionResult,
   promptUserForGasPrice,
 } from './utils/tasks'
 import { getConfigByChainId } from './config'
 
+enum Artifacts {
+  'NFTContract' = 'NFTContract',
+  'Multicall' = 'Multicall',
+}
+
+const CONTRACT_ARTIFACT_NAME: Artifacts = Artifacts.NFTContract
+
 enum Options {
-  enableWhitelistSale = 'enableWhitelistSale',
-  disableWhitelistSale = 'disableWhitelistSale',
+  enableAllowlistSale = 'enableAllowlistSale',
+  disableAllowlistSale = 'disableAllowlistSale',
   enableSale = 'enableSale',
   disableSale = 'disableSale',
-  setWhitelistAddresses = 'setWhitelistAddresses',
+  setAllowlistAddresses = 'setAllowlistAddresses',
   setBaseURI = 'setBaseURI',
   setContractURI = 'setContractURI',
   withdrawAll = 'withdrawAll',
+  setPricePerToken = 'setPricePerToken',
+  setPricePerTokenAllowlist = 'setPricePerTokenAllowlist',
+  setMaxSupply = 'setMaxSupply',
+  mint = 'mint',
+  sign = 'sign',
   setProvenance = 'setProvenance',
 }
 
@@ -51,7 +63,7 @@ async function main() {
 
   // We get the contract to interact with
   const nftContract = (await ethers.getContractAt(
-    'NFTContract',
+    CONTRACT_ARTIFACT_NAME,
     config.contractAddress
   )) as NFTContract
 
@@ -85,11 +97,11 @@ async function main() {
   console.log('Communicating with the blockchain...')
   let res: ContractTransaction | undefined = undefined
   switch (id) {
-    case Options.enableWhitelistSale:
-      res = await nftContract.setIsWhitelistSaleActive(true, { gasPrice })
+    case Options.enableAllowlistSale:
+      res = await nftContract.setIsAllowlistSaleActive(true, { gasPrice })
       break
-    case Options.disableWhitelistSale:
-      res = await nftContract.setIsWhitelistSaleActive(false, { gasPrice })
+    case Options.disableAllowlistSale:
+      res = await nftContract.setIsAllowlistSaleActive(false, { gasPrice })
       break
     case Options.enableSale:
       res = await nftContract.setIsSaleActive(true, { gasPrice })
@@ -100,15 +112,32 @@ async function main() {
     case Options.withdrawAll:
       res = await nftContract.withdrawAll({ gasPrice })
       break
-    case Options.setWhitelistAddresses:
-      const { whiteList } = config
-      if (whiteList.length === 0) {
-        console.error('No addresses on the whiteList!', whiteList)
-        process.exit(1)
-      }
-      res = await nftContract.setWhitelistAddresses(whiteList, 1, {
+    case Options.setPricePerToken:
+      res = await nftContract.setPricePerToken(parseEther('0.22'), { gasPrice })
+      break
+    case Options.setPricePerTokenAllowlist:
+      res = await nftContract.setPricePerTokenAllowlist(parseEther('0.17'), {
         gasPrice,
       })
+      break
+    case Options.setMaxSupply:
+      res = await nftContract.setMaxSupply(50, { gasPrice })
+      break
+    case Options.setAllowlistAddresses:
+      const { allowlist } = config
+      if (allowlist.length === 0) {
+        console.error('No addresses on the allowlist!', allowlist)
+        process.exit(1)
+      }
+      const ALLOW_LIST_NUM_ALOWED_TO_MINT = 1
+      console.log(allowlist, ALLOW_LIST_NUM_ALOWED_TO_MINT)
+      res = await nftContract.setAllowlistAddresses(
+        allowlist,
+        ALLOW_LIST_NUM_ALOWED_TO_MINT,
+        {
+          gasPrice,
+        }
+      )
       break
     case Options.setBaseURI:
       const { baseUri } = config
@@ -131,14 +160,28 @@ async function main() {
       })
       break
     case Options.setProvenance:
-      const { provenance } = config
-      if (!provenance) {
-        console.error('Missing provenance!', provenance)
+      const { provenanceHash } = config
+      if (!provenanceHash) {
+        console.error('Missing provenanceHash!', provenanceHash)
         process.exit(1)
       }
-      res = await nftContract.setProvenance(provenance, {
+      res = await nftContract.setProvenance(provenanceHash, {
         gasPrice,
       })
+      break
+    case Options.mint:
+      const TOKENS_TO_BE_MINTED = 1
+      const RECIPIENT = ownerAddress
+      const pricePerToken = await nftContract.PRICE_PER_TOKEN()
+      res = await nftContract.mint(1, RECIPIENT, {
+        value: pricePerToken.mul(TOKENS_TO_BE_MINTED),
+      })
+      break
+    case Options.sign:
+      const message =
+        'As owner of NFT with address 0x16EE106a08e8F76Fe50e4C460790C8B184998ae5, I propose event New event.'
+      const signature = await nftContract.signer.signMessage(message)
+      console.log(signature)
       break
     default:
       console.error('Invalid selection!')
