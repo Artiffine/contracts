@@ -14,6 +14,8 @@ export type { IERC2981 } from "./@openzeppelin/contracts/interfaces/IERC2981";
 export { IERC2981__factory } from "./factories/@openzeppelin/contracts/interfaces/IERC2981__factory";
 export type { ERC2981 } from "./@openzeppelin/contracts/token/common/ERC2981";
 export { ERC2981__factory } from "./factories/@openzeppelin/contracts/token/common/ERC2981__factory";
+export type { IERC20 } from "./@openzeppelin/contracts/token/ERC20/IERC20";
+export { IERC20__factory } from "./factories/@openzeppelin/contracts/token/ERC20/IERC20__factory";
 export type { ERC721 } from "./@openzeppelin/contracts/token/ERC721/ERC721";
 export { ERC721__factory } from "./factories/@openzeppelin/contracts/token/ERC721/ERC721__factory";
 export type { ERC721Enumerable } from "./@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable";

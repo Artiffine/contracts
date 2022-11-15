@@ -20,6 +20,7 @@ const MAX_PUBLIC_MINT = 10
 describe('NFTContract production config', () => {
   let Token: ContractFactory
   let contract: NFTContract
+  let admin: SignerWithAddress
   let owner: SignerWithAddress
   let addr1: SignerWithAddress
   let addr2: SignerWithAddress
@@ -29,10 +30,10 @@ describe('NFTContract production config', () => {
 
   beforeEach(async function () {
     // Get the ContractFactory and Signers here.
-    Token = await ethers.getContractFactory(CONTRACT_ARTIFACT_NAME)
-    ;[owner, addr1, addr2, addr3, addr4, ...addrs] = await ethers.getSigners()
+    Token = await ethers.getContractFactory(CONTRACT_ARTIFACT_NAME);
+    [admin, owner, addr1, addr2, addr3, addr4, ...addrs] = await ethers.getSigners()
 
-    contract = (await Token.deploy()) as unknown as NFTContract
+    contract = (await Token.deploy(owner.address)) as unknown as NFTContract
     await contract.deployed()
   })
 
