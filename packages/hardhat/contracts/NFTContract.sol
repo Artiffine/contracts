@@ -185,7 +185,7 @@ contract NFTContract is ERC721, ERC721Enumerable, Ownable, ERC721Royalty {
      * @dev Recovers ERC20 token back to the owner.
      */
     function recoverToken(IERC20 _token) external onlyOwner {
-        require(address(_token) != address(0), "Token is address zero");
+        require(address(_token) != address(0), 'Token is address zero');
         uint256 balance = _token.balanceOf(address(this));
         require(balance > 0, 'Token balance must be > 0');
         _token.transfer(owner(), balance);
@@ -195,8 +195,8 @@ contract NFTContract is ERC721, ERC721Enumerable, Ownable, ERC721Royalty {
      * @dev Adds address to _admins.
      */
     function addAdmin(address _admin) external onlyOwner {
-        require(_admin != address(0), "Admin cannot be address zero");
-        require(!_admins[_admin], "Admin already exists");
+        require(_admin != address(0), 'Admin cannot be address zero');
+        require(!_admins[_admin], 'Admin already exists');
         _admins[_admin] = true;
         emit AdminAdded(_admin);
     }
@@ -205,9 +205,9 @@ contract NFTContract is ERC721, ERC721Enumerable, Ownable, ERC721Royalty {
      * @dev Removes address from _admins.
      */
     function removeAdmin(address _admin) external onlyOwner {
-        require(_admin != address(0), "Admin cannot be address zero");
-        require(_admins[_admin], "Admin does not exist");
+        require(_admin != address(0), 'Admin cannot be address zero');
+        require(_admins[_admin], 'Admin does not exist');
         _admins[_admin] = false;
-        emit AdminAdded(_admin);
+        emit AdminRemoved(_admin);
     }
 }

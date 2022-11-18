@@ -367,7 +367,7 @@ describe('NFTContract', () => {
 
     it('should emit event', async () => {
       let action = contract.connect(owner).removeAdmin(admin.address)
-      await expect(action).to.emit(contract, "AdminAdded").withArgs(admin.address)
+      await expect(action).to.emit(contract, "AdminRemoved").withArgs(admin.address)
     })
   })
 
