@@ -4,7 +4,9 @@
 
 # 🏄‍♂️ Quick Start
 
-Prerequisites: [Node](https://nodejs.org/en/download/) plus [Yarn](https://classic.yarnpkg.com/en/docs/install/) and [Git](https://git-scm.com/downloads)
+Prerequisites: [Node](https://nodejs.org/en/download/) plus [Yarn](https://classic.yarnpkg.com/en/docs/install/) and [Git](https://git-scm.com/downloads). 
+
+You also need to create `.env` file with variables from `packages/hardhat/hardhat.config.ts`.
 
 > run the project:
 

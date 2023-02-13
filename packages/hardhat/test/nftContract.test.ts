@@ -5,6 +5,8 @@ import { expect } from 'chai'
 import { formatEther } from '@ethersproject/units'
 
 import { NFTContract } from '../typechain-types/contracts'
+import { getAddress } from 'ethers/lib/utils'
+import { constants } from "ethers";
 
 enum Artifacts {
   'NFTContract' = 'NFTContract',
@@ -12,10 +14,13 @@ enum Artifacts {
 }
 
 const CONTRACT_ARTIFACT_NAME: Artifacts = Artifacts.NFTContract
+const ADMIN_REVERT_STRING: string = "Caller is not the admin/owner"
+const OWNABLE_REVERT_STRING: string = "Ownable: caller is not the owner"
 
 describe('NFTContract', () => {
   let Token: ContractFactory
   let contract: NFTContract
+  let admin: SignerWithAddress
   let owner: SignerWithAddress
   let addr1: SignerWithAddress
   let addr2: SignerWithAddress
@@ -25,10 +30,10 @@ describe('NFTContract', () => {
 
   beforeEach(async function () {
     // Get the ContractFactory and Signers here.
-    Token = await ethers.getContractFactory(CONTRACT_ARTIFACT_NAME)
-    ;[owner, addr1, addr2, addr3, addr4, ...addrs] = await ethers.getSigners()
+    Token = await ethers.getContractFactory(CONTRACT_ARTIFACT_NAME);
+    [admin, owner, addr1, addr2, addr3, addr4, ...addrs] = await ethers.getSigners()
 
-    contract = (await Token.deploy()) as NFTContract
+    contract = (await Token.deploy(owner.address)) as NFTContract
     await contract.deployed()
   })
 
@@ -123,7 +128,7 @@ describe('NFTContract', () => {
       expect(await contract.balanceOf(addr1.address)).to.equal(0)
 
       // try to withdraw
-      await expect(contract.withdrawAll()).to.be.revertedWith(
+      await expect(contract.connect(owner).withdrawAll()).to.be.revertedWith(
         'Contract balance must be > 0'
       )
     })
@@ -299,5 +304,204 @@ describe('NFTContract', () => {
           .mint(1, addr1.address, { value: PRICE_PER_TOKEN })
       ).to.be.revertedWith('Purchase would exceed max tokens')
     })
+  })
+
+  describe('recoverToken', () => {
+    it('should not recover address zero', async () => {
+      let action = contract.connect(owner).recoverToken(constants.AddressZero);
+      await expect(action).to.be.revertedWith("Token is address zero");
+    })
+
+    it('should be callable only by owner', async () => {
+      let adminCall = contract.connect(admin).recoverToken(constants.AddressZero);
+      await expect(adminCall).to.be.revertedWith(OWNABLE_REVERT_STRING);
+
+      let userCall = contract.connect(addr1).recoverToken(constants.AddressZero);
+      await expect(userCall).to.be.revertedWith(OWNABLE_REVERT_STRING);
+    })
+  })
+
+  describe('addAdmin', () => {
+    it('should not add address zero', async () => {
+      let action = contract.connect(owner).addAdmin(constants.AddressZero)
+      await expect(action).to.be.revertedWith("Admin cannot be address zero")
+    })
+
+    it('should not add existing admin again', async () => {
+      let action = contract.connect(owner).addAdmin(admin.address)
+      await expect(action).to.be.revertedWith("Admin already exists")
+    })
+
+    it('should be callable only by owner', async () => {
+      let addAdmin = contract.connect(admin).addAdmin(addr3.address)
+      await expect(addAdmin).to.be.revertedWith("Ownable: caller is not the owner")
+
+      let addUser = contract.connect(addr3).addAdmin(addr3.address)
+      await expect(addUser).to.be.revertedWith("Ownable: caller is not the owner")
+    })
+
+    it('should emit event', async () => {
+      let action = contract.connect(owner).addAdmin(addr3.address)
+      await expect(action).to.emit(contract, "AdminAdded").withArgs(addr3.address)
+    })
+  })
+
+  describe('removeAdmin', () => {
+    it('should not add address zero', async () => {
+      let action = contract.connect(owner).removeAdmin(constants.AddressZero)
+      await expect(action).to.be.revertedWith("Admin cannot be address zero")
+    })
+
+    it('should not add existing admin again', async () => {
+      let action = contract.connect(owner).removeAdmin(addr3.address)
+      await expect(action).to.be.revertedWith("Admin does not exist")
+    })
+
+    it('should be callable only by owner', async () => {
+      let addAdmin = contract.connect(admin).removeAdmin(admin.address)
+      await expect(addAdmin).to.be.revertedWith("Ownable: caller is not the owner")
+
+      let addUser = contract.connect(addr3).removeAdmin(admin.address)
+      await expect(addUser).to.be.revertedWith("Ownable: caller is not the owner")
+    })
+
+    it('should emit event', async () => {
+      let action = contract.connect(owner).removeAdmin(admin.address)
+      await expect(action).to.emit(contract, "AdminRemoved").withArgs(admin.address)
+    })
+  })
+
+  describe('access control', () => {
+    it('admin should be able to call these functions', async () => {
+      let setIsAllowlistSaleActive = contract.setIsAllowlistSaleActive(true)
+      let setAllowlistAddresses = contract.setAllowlistAddresses([addr1.address], 1)
+      let setMaxSupply = contract.setMaxSupply(1000)
+      let setMaxPublicMint = contract.setMaxPublicMint(1000)
+      let setPricePerToken = contract.setPricePerToken(1000)
+      let setPricePerTokenAllowlist = contract.setPricePerTokenAllowlist(1)
+      let setBaseURI = contract.setBaseURI("uri")
+      let setProvenance = contract.setProvenance("provenanve")
+      let setContractURI = contract.setContractURI("uri")
+      let setIsSaleActive = contract.setIsSaleActive(true)
+      let freeMint = contract.freeMint(10, addr1.address)
+
+      await expect(setIsAllowlistSaleActive).to.not.be.reverted
+      await expect(setAllowlistAddresses).to.not.be.reverted
+      await expect(setMaxSupply).to.not.be.reverted
+      await expect(setMaxPublicMint).to.not.be.reverted
+      await expect(setPricePerToken).to.not.be.reverted
+      await expect(setPricePerTokenAllowlist).to.not.be.reverted
+      await expect(setBaseURI).to.not.be.reverted
+      await expect(setProvenance).to.not.be.reverted
+      await expect(setContractURI).to.not.be.reverted
+      await expect(setIsSaleActive).to.not.be.reverted
+      await expect(freeMint).to.not.be.reverted
+    })
+
+    it('second admin should be able to call these functions', async () => {
+      await contract.connect(owner).addAdmin(addr4.address)
+
+      let setIsAllowlistSaleActive = contract.connect(addr4).setIsAllowlistSaleActive(true)
+      let setAllowlistAddresses = contract.connect(addr4).setAllowlistAddresses([addr1.address], 1)
+      let setMaxSupply = contract.connect(addr4).setMaxSupply(1000)
+      let setMaxPublicMint = contract.connect(addr4).setMaxPublicMint(1000)
+      let setPricePerToken = contract.connect(addr4).setPricePerToken(1000)
+      let setPricePerTokenAllowlist = contract.connect(addr4).setPricePerTokenAllowlist(1)
+      let setBaseURI = contract.connect(addr4).setBaseURI("uri")
+      let setProvenance = contract.connect(addr4).setProvenance("provenanve")
+      let setContractURI = contract.connect(addr4).setContractURI("uri")
+      let setIsSaleActive = contract.connect(addr4).setIsSaleActive(true)
+      let freeMint = contract.connect(addr4).freeMint(10, addr1.address)
+
+      await expect(setIsAllowlistSaleActive).to.not.be.reverted
+      await expect(setAllowlistAddresses).to.not.be.reverted
+      await expect(setMaxSupply).to.not.be.reverted
+      await expect(setMaxPublicMint).to.not.be.reverted
+      await expect(setPricePerToken).to.not.be.reverted
+      await expect(setPricePerTokenAllowlist).to.not.be.reverted
+      await expect(setBaseURI).to.not.be.reverted
+      await expect(setProvenance).to.not.be.reverted
+      await expect(setContractURI).to.not.be.reverted
+      await expect(setIsSaleActive).to.not.be.reverted
+      await expect(freeMint).to.not.be.reverted
+    })
+
+    it('owner should be able to call these functions', async () => {
+      let setIsAllowlistSaleActive = contract.connect(owner).setIsAllowlistSaleActive(true)
+      let setAllowlistAddresses = contract.connect(owner).setAllowlistAddresses([addr1.address], 1)
+      let setMaxSupply = contract.connect(owner).setMaxSupply(1000)
+      let setMaxPublicMint = contract.connect(owner).setMaxPublicMint(1000)
+      let setPricePerToken = contract.connect(owner).setPricePerToken(1000)
+      let setPricePerTokenAllowlist = contract.connect(owner).setPricePerTokenAllowlist(1)
+      let setBaseURI = contract.connect(owner).setBaseURI("uri")
+      let setProvenance = contract.connect(owner).setProvenance("provenanve")
+      let setContractURI = contract.connect(owner).setContractURI("uri")
+      let setIsSaleActive = contract.connect(owner).setIsSaleActive(true)
+      let freeMint = contract.connect(owner).freeMint(10, addr1.address)
+      let addAdmin = contract.connect(owner).addAdmin(addr4.address)
+      let removeAdmin = contract.connect(owner).removeAdmin(addr4.address)
+      let withdrawAll = contract.connect(owner).withdrawAll()
+
+      await expect(setIsAllowlistSaleActive).to.not.be.reverted
+      await expect(setAllowlistAddresses).to.not.be.reverted
+      await expect(setMaxSupply).to.not.be.reverted
+      await expect(setMaxPublicMint).to.not.be.reverted
+      await expect(setPricePerToken).to.not.be.reverted
+      await expect(setPricePerTokenAllowlist).to.not.be.reverted
+      await expect(setBaseURI).to.not.be.reverted
+      await expect(setProvenance).to.not.be.reverted
+      await expect(setContractURI).to.not.be.reverted
+      await expect(setIsSaleActive).to.not.be.reverted
+      await expect(freeMint).to.not.be.reverted
+      await expect(addAdmin).to.not.be.reverted
+      await expect(removeAdmin).to.not.be.reverted
+      await expect(withdrawAll).to.not.be.revertedWith(OWNABLE_REVERT_STRING).and.to.not.be.revertedWith(ADMIN_REVERT_STRING);
+    })
+
+    it('users should not be able to call these functions', async () => {
+      let setIsAllowlistSaleActive = contract.connect(addr1).setIsAllowlistSaleActive(true)
+      let setAllowlistAddresses = contract.connect(addr1).setAllowlistAddresses([addr1.address], 1)
+      let setMaxSupply = contract.connect(addr1).setMaxSupply(1000)
+      let setMaxPublicMint = contract.connect(addr1).setMaxPublicMint(1000)
+      let setPricePerToken = contract.connect(addr1).setPricePerToken(1000)
+      let setPricePerTokenAllowlist = contract.connect(addr1).setPricePerTokenAllowlist(1)
+      let setBaseURI = contract.connect(addr1).setBaseURI("uri")
+      let setProvenance = contract.connect(addr1).setProvenance("provenanve")
+      let setContractURI = contract.connect(addr1).setContractURI("uri")
+      let setIsSaleActive = contract.connect(addr1).setIsSaleActive(true)
+      let freeMint = contract.connect(addr1).freeMint(10, addr1.address)
+      let addAdmin = contract.connect(addr1).addAdmin(addr4.address)
+      let removeAdmin = contract.connect(addr1).removeAdmin(addr4.address)
+      let recoverToken = contract.connect(addr1).recoverToken(addr4.address)
+      let withdrawAll = contract.connect(addr1).withdrawAll()
+
+      await expect(setIsAllowlistSaleActive).to.be.revertedWith(ADMIN_REVERT_STRING)
+      await expect(setAllowlistAddresses).to.be.revertedWith(ADMIN_REVERT_STRING)
+      await expect(setMaxSupply).to.be.revertedWith(ADMIN_REVERT_STRING)
+      await expect(setMaxPublicMint).to.be.revertedWith(ADMIN_REVERT_STRING)
+      await expect(setPricePerToken).to.be.revertedWith(ADMIN_REVERT_STRING)
+      await expect(setPricePerTokenAllowlist).to.be.revertedWith(ADMIN_REVERT_STRING)
+      await expect(setBaseURI).to.be.revertedWith(ADMIN_REVERT_STRING)
+      await expect(setProvenance).to.be.revertedWith(ADMIN_REVERT_STRING)
+      await expect(setContractURI).to.be.revertedWith(ADMIN_REVERT_STRING)
+      await expect(setIsSaleActive).to.be.revertedWith(ADMIN_REVERT_STRING)
+      await expect(freeMint).to.be.revertedWith(ADMIN_REVERT_STRING)
+      await expect(addAdmin).to.be.revertedWith(OWNABLE_REVERT_STRING)
+      await expect(removeAdmin).to.be.revertedWith(OWNABLE_REVERT_STRING)
+      await expect(recoverToken).to.be.revertedWith(OWNABLE_REVERT_STRING)
+      await expect(withdrawAll).to.be.revertedWith(OWNABLE_REVERT_STRING)
+    })
+  })
+
+  it('admins should not be able to call these functions', async () => {
+    let addAdmin = contract.connect(admin).addAdmin(addr4.address)
+    let removeAdmin = contract.connect(admin).removeAdmin(addr4.address)
+    let recoverToken = contract.connect(admin).recoverToken(addr4.address)
+    let withdrawAll = contract.connect(admin).withdrawAll()
+
+    await expect(addAdmin).to.be.revertedWith(OWNABLE_REVERT_STRING)
+    await expect(removeAdmin).to.be.revertedWith(OWNABLE_REVERT_STRING)
+    await expect(recoverToken).to.be.revertedWith(OWNABLE_REVERT_STRING)
+    await expect(withdrawAll).to.be.revertedWith(OWNABLE_REVERT_STRING)
   })
 })

@@ -35,6 +35,7 @@ export interface NFTContractInterface extends utils.Interface {
     "PRICE_PER_TOKEN()": FunctionFragment;
     "PRICE_PER_TOKEN_ALLOWLIST()": FunctionFragment;
     "PROVENANCE()": FunctionFragment;
+    "addAdmin(address)": FunctionFragment;
     "allowlistMintAmount(address)": FunctionFragment;
     "approve(address,uint256)": FunctionFragment;
     "balanceOf(address)": FunctionFragment;
@@ -49,6 +50,8 @@ export interface NFTContractInterface extends utils.Interface {
     "name()": FunctionFragment;
     "owner()": FunctionFragment;
     "ownerOf(uint256)": FunctionFragment;
+    "recoverToken(address)": FunctionFragment;
+    "removeAdmin(address)": FunctionFragment;
     "renounceOwnership()": FunctionFragment;
     "royaltyInfo(uint256,uint256)": FunctionFragment;
     "safeTransferFrom(address,address,uint256)": FunctionFragment;
@@ -83,6 +86,7 @@ export interface NFTContractInterface extends utils.Interface {
       | "PRICE_PER_TOKEN"
       | "PRICE_PER_TOKEN_ALLOWLIST"
       | "PROVENANCE"
+      | "addAdmin"
       | "allowlistMintAmount"
       | "approve"
       | "balanceOf"
@@ -97,6 +101,8 @@ export interface NFTContractInterface extends utils.Interface {
       | "name"
       | "owner"
       | "ownerOf"
+      | "recoverToken"
+      | "removeAdmin"
       | "renounceOwnership"
       | "royaltyInfo"
       | "safeTransferFrom(address,address,uint256)"
@@ -143,6 +149,10 @@ export interface NFTContractInterface extends utils.Interface {
   encodeFunctionData(
     functionFragment: "PROVENANCE",
     values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "addAdmin",
+    values: [PromiseOrValue<string>]
   ): string;
   encodeFunctionData(
     functionFragment: "allowlistMintAmount",
@@ -193,6 +203,14 @@ export interface NFTContractInterface extends utils.Interface {
   encodeFunctionData(
     functionFragment: "ownerOf",
     values: [PromiseOrValue<BigNumberish>]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "recoverToken",
+    values: [PromiseOrValue<string>]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "removeAdmin",
+    values: [PromiseOrValue<string>]
   ): string;
   encodeFunctionData(
     functionFragment: "renounceOwnership",
@@ -319,6 +337,7 @@ export interface NFTContractInterface extends utils.Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "PROVENANCE", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "addAdmin", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "allowlistMintAmount",
     data: BytesLike
@@ -354,6 +373,14 @@ export interface NFTContractInterface extends utils.Interface {
   decodeFunctionResult(functionFragment: "name", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "owner", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "ownerOf", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "recoverToken",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "removeAdmin",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(
     functionFragment: "renounceOwnership",
     data: BytesLike
@@ -447,17 +474,35 @@ export interface NFTContractInterface extends utils.Interface {
   ): Result;
 
   events: {
+    "AdminAdded(address)": EventFragment;
+    "AdminRemoved(address)": EventFragment;
     "Approval(address,address,uint256)": EventFragment;
     "ApprovalForAll(address,address,bool)": EventFragment;
     "OwnershipTransferred(address,address)": EventFragment;
     "Transfer(address,address,uint256)": EventFragment;
   };
 
+  getEvent(nameOrSignatureOrTopic: "AdminAdded"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "AdminRemoved"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "Approval"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "ApprovalForAll"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "OwnershipTransferred"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "Transfer"): EventFragment;
 }
+
+export interface AdminAddedEventObject {
+  admin: string;
+}
+export type AdminAddedEvent = TypedEvent<[string], AdminAddedEventObject>;
+
+export type AdminAddedEventFilter = TypedEventFilter<AdminAddedEvent>;
+
+export interface AdminRemovedEventObject {
+  admin: string;
+}
+export type AdminRemovedEvent = TypedEvent<[string], AdminRemovedEventObject>;
+
+export type AdminRemovedEventFilter = TypedEventFilter<AdminRemovedEvent>;
 
 export interface ApprovalEventObject {
   owner: string;
@@ -544,6 +589,11 @@ export interface NFTContract extends BaseContract {
 
     PROVENANCE(overrides?: CallOverrides): Promise<[string]>;
 
+    addAdmin(
+      _admin: PromiseOrValue<string>,
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<ContractTransaction>;
+
     allowlistMintAmount(
       addr: PromiseOrValue<string>,
       overrides?: CallOverrides
@@ -602,6 +652,16 @@ export interface NFTContract extends BaseContract {
       tokenId: PromiseOrValue<BigNumberish>,
       overrides?: CallOverrides
     ): Promise<[string]>;
+
+    recoverToken(
+      _token: PromiseOrValue<string>,
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<ContractTransaction>;
+
+    removeAdmin(
+      _admin: PromiseOrValue<string>,
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<ContractTransaction>;
 
     renounceOwnership(
       overrides?: Overrides & { from?: PromiseOrValue<string> }
@@ -743,6 +803,11 @@ export interface NFTContract extends BaseContract {
 
   PROVENANCE(overrides?: CallOverrides): Promise<string>;
 
+  addAdmin(
+    _admin: PromiseOrValue<string>,
+    overrides?: Overrides & { from?: PromiseOrValue<string> }
+  ): Promise<ContractTransaction>;
+
   allowlistMintAmount(
     addr: PromiseOrValue<string>,
     overrides?: CallOverrides
@@ -801,6 +866,16 @@ export interface NFTContract extends BaseContract {
     tokenId: PromiseOrValue<BigNumberish>,
     overrides?: CallOverrides
   ): Promise<string>;
+
+  recoverToken(
+    _token: PromiseOrValue<string>,
+    overrides?: Overrides & { from?: PromiseOrValue<string> }
+  ): Promise<ContractTransaction>;
+
+  removeAdmin(
+    _admin: PromiseOrValue<string>,
+    overrides?: Overrides & { from?: PromiseOrValue<string> }
+  ): Promise<ContractTransaction>;
 
   renounceOwnership(
     overrides?: Overrides & { from?: PromiseOrValue<string> }
@@ -942,6 +1017,11 @@ export interface NFTContract extends BaseContract {
 
     PROVENANCE(overrides?: CallOverrides): Promise<string>;
 
+    addAdmin(
+      _admin: PromiseOrValue<string>,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
     allowlistMintAmount(
       addr: PromiseOrValue<string>,
       overrides?: CallOverrides
@@ -1000,6 +1080,16 @@ export interface NFTContract extends BaseContract {
       tokenId: PromiseOrValue<BigNumberish>,
       overrides?: CallOverrides
     ): Promise<string>;
+
+    recoverToken(
+      _token: PromiseOrValue<string>,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    removeAdmin(
+      _admin: PromiseOrValue<string>,
+      overrides?: CallOverrides
+    ): Promise<void>;
 
     renounceOwnership(overrides?: CallOverrides): Promise<void>;
 
@@ -1128,6 +1218,18 @@ export interface NFTContract extends BaseContract {
   };
 
   filters: {
+    "AdminAdded(address)"(
+      admin?: PromiseOrValue<string> | null
+    ): AdminAddedEventFilter;
+    AdminAdded(admin?: PromiseOrValue<string> | null): AdminAddedEventFilter;
+
+    "AdminRemoved(address)"(
+      admin?: PromiseOrValue<string> | null
+    ): AdminRemovedEventFilter;
+    AdminRemoved(
+      admin?: PromiseOrValue<string> | null
+    ): AdminRemovedEventFilter;
+
     "Approval(address,address,uint256)"(
       owner?: PromiseOrValue<string> | null,
       approved?: PromiseOrValue<string> | null,
@@ -1181,6 +1283,11 @@ export interface NFTContract extends BaseContract {
     PRICE_PER_TOKEN_ALLOWLIST(overrides?: CallOverrides): Promise<BigNumber>;
 
     PROVENANCE(overrides?: CallOverrides): Promise<BigNumber>;
+
+    addAdmin(
+      _admin: PromiseOrValue<string>,
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<BigNumber>;
 
     allowlistMintAmount(
       addr: PromiseOrValue<string>,
@@ -1239,6 +1346,16 @@ export interface NFTContract extends BaseContract {
     ownerOf(
       tokenId: PromiseOrValue<BigNumberish>,
       overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    recoverToken(
+      _token: PromiseOrValue<string>,
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<BigNumber>;
+
+    removeAdmin(
+      _admin: PromiseOrValue<string>,
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<BigNumber>;
 
     renounceOwnership(
@@ -1384,6 +1501,11 @@ export interface NFTContract extends BaseContract {
 
     PROVENANCE(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
+    addAdmin(
+      _admin: PromiseOrValue<string>,
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<PopulatedTransaction>;
+
     allowlistMintAmount(
       addr: PromiseOrValue<string>,
       overrides?: CallOverrides
@@ -1443,6 +1565,16 @@ export interface NFTContract extends BaseContract {
     ownerOf(
       tokenId: PromiseOrValue<BigNumberish>,
       overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    recoverToken(
+      _token: PromiseOrValue<string>,
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<PopulatedTransaction>;
+
+    removeAdmin(
+      _admin: PromiseOrValue<string>,
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<PopulatedTransaction>;
 
     renounceOwnership(

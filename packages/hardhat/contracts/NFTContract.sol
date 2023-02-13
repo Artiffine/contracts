@@ -2,6 +2,7 @@
 
 pragma solidity ^0.8.9;
 
+import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 import '@openzeppelin/contracts/token/ERC721/ERC721.sol';
 import '@openzeppelin/contracts/access/Ownable.sol';
 import '@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol';
@@ -28,23 +29,45 @@ contract NFTContract is ERC721, ERC721Enumerable, Ownable, ERC721Royalty {
     uint256 public PRICE_PER_TOKEN = 0.0001 ether;
     uint256 public PRICE_PER_TOKEN_ALLOWLIST = 0.00001 ether;
 
+    event AdminAdded(address indexed admin);
+    event AdminRemoved(address indexed admin);
+
+    mapping(address => bool) private _admins;
     mapping(address => uint8) private _allowlist;
 
-    constructor() ERC721('ArtiffineDemo', 'ARTIF') {}
-
-    // allowlist mint
-    function setIsAllowlistSaleActive(bool isActive) external onlyOwner {
-        isAllowlistSaleActive = isActive;
+    constructor(address _owner) ERC721('ArtiffineDemo', 'ARTIF') {
+        _admins[msg.sender] = true;
+        _transferOwnership(_owner);
     }
 
-    function setAllowlistAddresses(address[] calldata addresses, uint8 numAllowedToMint) external onlyOwner {
-        for (uint8 i = 0; i < addresses.length; i++) {
-            _allowlist[addresses[i]] = numAllowedToMint;
-        }
+    /**
+     * @dev Lets only admins to call functions, owner() is also consider an admin.
+     */
+    modifier onlyAdmin() {
+        require(_admins[msg.sender] || msg.sender == owner(), 'Caller is not the admin/owner');
+        _;
     }
+
+    function supportsInterface(
+        bytes4 interfaceId
+    ) public view virtual override(ERC721, ERC721Enumerable, ERC721Royalty) returns (bool) {
+        return super.supportsInterface(interfaceId);
+    }
+
+    // royalties
+    function _burn(uint256 tokenId) internal virtual override(ERC721, ERC721Royalty) {
+        super._burn(tokenId);
+        _resetTokenRoyalty(tokenId);
+    }
+
+    /* ============ External Functions ============ */
 
     function allowlistMintAmount(address addr) external view returns (uint8) {
         return _allowlist[addr];
+    }
+
+    function setDefaultRoyalty(address recipient, uint96 fraction) public {
+        _setDefaultRoyalty(recipient, fraction);
     }
 
     function mintAllowlisted(uint8 numberOfTokens) external payable {
@@ -60,70 +83,6 @@ contract NFTContract is ERC721, ERC721Enumerable, Ownable, ERC721Royalty {
         }
     }
 
-    // override base functions
-    function _beforeTokenTransfer(
-        address from,
-        address to,
-        uint256 tokenId,
-        uint256 batchSize
-    ) internal override(ERC721, ERC721Enumerable) {
-        super._beforeTokenTransfer(from, to, tokenId, batchSize);
-    }
-
-    function supportsInterface(
-        bytes4 interfaceId
-    ) public view virtual override(ERC721, ERC721Enumerable, ERC721Royalty) returns (bool) {
-        return super.supportsInterface(interfaceId);
-    }
-
-    // setters
-    function setMaxSupply(uint256 maxSupply_) external onlyOwner {
-        MAX_SUPPLY = maxSupply_;
-    }
-
-    function setMaxPublicMint(uint256 maxPublicMint_) external onlyOwner {
-        MAX_PUBLIC_MINT = maxPublicMint_;
-    }
-
-    function setPricePerToken(uint256 pricePerToken_) external onlyOwner {
-        PRICE_PER_TOKEN = pricePerToken_;
-    }
-
-    function setPricePerTokenAllowlist(uint256 pricePerTokenAllowlist_) external onlyOwner {
-        PRICE_PER_TOKEN_ALLOWLIST = pricePerTokenAllowlist_;
-    }
-
-    function setBaseURI(string memory baseURI_) external onlyOwner {
-        _baseURIextended = baseURI_;
-    }
-
-    function _baseURI() internal view virtual override returns (string memory) {
-        return _baseURIextended;
-    }
-
-    function setProvenance(string memory provenance) public onlyOwner {
-        PROVENANCE = provenance;
-    }
-
-    function setContractURI(string memory contractUri_) external onlyOwner {
-        contractURI = contractUri_;
-    }
-
-    // royalties
-    function _burn(uint256 tokenId) internal virtual override(ERC721, ERC721Royalty) {
-        super._burn(tokenId);
-        _resetTokenRoyalty(tokenId);
-    }
-
-    function setDefaultRoyalty(address recipient, uint96 fraction) public {
-        _setDefaultRoyalty(recipient, fraction);
-    }
-
-    // public mint
-    function setIsSaleActive(bool isActive) public onlyOwner {
-        isSaleActive = isActive;
-    }
-
     function mint(uint8 numberOfTokens, address to) public payable {
         uint256 ts = totalSupply();
         require(isSaleActive, 'Sale must be active to mint tokens');
@@ -136,8 +95,69 @@ contract NFTContract is ERC721, ERC721Enumerable, Ownable, ERC721Royalty {
         }
     }
 
+    /* ============ External Admin/Owner Functions ============ */
+
+    // allowlist mint
+    function setIsAllowlistSaleActive(bool isActive) external onlyAdmin {
+        isAllowlistSaleActive = isActive;
+    }
+
+    function setAllowlistAddresses(address[] calldata addresses, uint8 numAllowedToMint) external onlyAdmin {
+        for (uint8 i = 0; i < addresses.length; i++) {
+            _allowlist[addresses[i]] = numAllowedToMint;
+        }
+    }
+
+    // override base functions
+    function _beforeTokenTransfer(
+        address from,
+        address to,
+        uint256 tokenId,
+        uint256 batchSize
+    ) internal override(ERC721, ERC721Enumerable) {
+        super._beforeTokenTransfer(from, to, tokenId, batchSize);
+    }
+
+    // setters
+    function setMaxSupply(uint256 maxSupply_) external onlyAdmin {
+        MAX_SUPPLY = maxSupply_;
+    }
+
+    function setMaxPublicMint(uint256 maxPublicMint_) external onlyAdmin {
+        MAX_PUBLIC_MINT = maxPublicMint_;
+    }
+
+    function setPricePerToken(uint256 pricePerToken_) external onlyAdmin {
+        PRICE_PER_TOKEN = pricePerToken_;
+    }
+
+    function setPricePerTokenAllowlist(uint256 pricePerTokenAllowlist_) external onlyAdmin {
+        PRICE_PER_TOKEN_ALLOWLIST = pricePerTokenAllowlist_;
+    }
+
+    function setBaseURI(string memory baseURI_) external onlyAdmin {
+        _baseURIextended = baseURI_;
+    }
+
+    function _baseURI() internal view virtual override returns (string memory) {
+        return _baseURIextended;
+    }
+
+    function setProvenance(string memory provenance) public onlyAdmin {
+        PROVENANCE = provenance;
+    }
+
+    function setContractURI(string memory contractUri_) external onlyAdmin {
+        contractURI = contractUri_;
+    }
+
+    // public mint
+    function setIsSaleActive(bool isActive) public onlyAdmin {
+        isSaleActive = isActive;
+    }
+
     // free mint
-    function freeMint(uint256 numberOfTokens, address to) public onlyOwner {
+    function freeMint(uint256 numberOfTokens, address to) public onlyAdmin {
         uint256 ts = totalSupply();
         require(ts + numberOfTokens <= MAX_SUPPLY, 'Purchase would exceed max tokens');
 
@@ -146,8 +166,10 @@ contract NFTContract is ERC721, ERC721Enumerable, Ownable, ERC721Royalty {
         }
     }
 
+    /* ============ External Owner Functions ============ */
+
     // withdraw functions
-    function withdrawAll() public onlyOwner {
+    function withdrawAll() external onlyOwner {
         uint256 balance = address(this).balance;
         require(balance > 0, 'Contract balance must be > 0');
         _widthdraw(owner(), address(this).balance);
@@ -157,5 +179,35 @@ contract NFTContract is ERC721, ERC721Enumerable, Ownable, ERC721Royalty {
         require(address(this).balance >= _amount, 'Contract balance must be >= _amount');
         (bool success, ) = _address.call{value: _amount}('');
         require(success, 'Transfer failed.');
+    }
+
+    /**
+     * @dev Recovers ERC20 token back to the owner.
+     */
+    function recoverToken(IERC20 _token) external onlyOwner {
+        require(address(_token) != address(0), 'Token is address zero');
+        uint256 balance = _token.balanceOf(address(this));
+        require(balance > 0, 'Token balance must be > 0');
+        _token.transfer(owner(), balance);
+    }
+
+    /**
+     * @dev Adds address to _admins.
+     */
+    function addAdmin(address _admin) external onlyOwner {
+        require(_admin != address(0), 'Admin cannot be address zero');
+        require(!_admins[_admin], 'Admin already exists');
+        _admins[_admin] = true;
+        emit AdminAdded(_admin);
+    }
+
+    /**
+     * @dev Removes address from _admins.
+     */
+    function removeAdmin(address _admin) external onlyOwner {
+        require(_admin != address(0), 'Admin cannot be address zero');
+        require(_admins[_admin], 'Admin does not exist');
+        _admins[_admin] = false;
+        emit AdminRemoved(_admin);
     }
 }
